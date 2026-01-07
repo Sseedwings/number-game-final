@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality } from "@google/genai";
 
 // 오디오 데이터 디코딩 및 재생 유틸리티
@@ -26,8 +25,25 @@ async function playAudioFromBase64(base64: string) {
   source.start(0);
 }
 
-export const generateSageFeedback = async (guess: number, target: number, attempt: number) => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+// API 키 유효성 테스트
+export const testApiKey = async (apiKey: string): Promise<boolean> => {
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: "ping",
+    });
+    return !!response.text;
+  } catch (err) {
+    console.error("API Key validation failed:", err);
+    return false;
+  }
+};
+
+export const generateSageFeedback = async (guess: number, target: number, attempt: number, userApiKey: string) => {
+  const apiKey = userApiKey || process.env.API_KEY || "";
+  const ai = new GoogleGenAI({ apiKey });
+  
   const isCorrect = guess === target;
   const direction = guess > target ? "너무 높소" : "너무 낮소";
 
@@ -48,9 +64,11 @@ export const generateSageFeedback = async (guess: number, target: number, attemp
   return response.text;
 };
 
-export const speakMessage = async (text: string) => {
+export const speakMessage = async (text: string, userApiKey: string) => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+    const apiKey = userApiKey || process.env.API_KEY || "";
+    const ai = new GoogleGenAI({ apiKey });
+    
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],

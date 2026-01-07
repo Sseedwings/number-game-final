@@ -1,8 +1,8 @@
 
-import React from "https://esm.sh/react@^19.2.3";
+import React from "react";
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine 
-} from "https://esm.sh/recharts@^3.6.0";
+} from "recharts";
 
 export default function GuessChart({ guesses, target, showTarget }: any) {
   const data = guesses.map((g: any, i: number) => ({ attempt: i + 1, value: g.value }));
