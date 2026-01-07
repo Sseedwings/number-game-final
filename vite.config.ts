@@ -4,11 +4,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Vite 빌드 타임에 process.env 객체를 브라우저용으로 치환
-    'process.env': {
-      NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'production'),
-      API_KEY: JSON.stringify(process.env.API_KEY || '')
-    },
+    // 브라우저 런타임에서 process.env 참조를 실제 값으로 치환
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || ''),
     'global': 'window'
   },
   build: {

@@ -1,5 +1,13 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
+// TypeScript 컴파일 에러 TS2580 해결을 위한 선언
+declare var process: {
+  env: {
+    NODE_ENV: string;
+    API_KEY: string;
+  };
+};
+
 // 오디오 데이터 디코딩 및 재생 유틸리티
 async function playAudioFromBase64(base64: string) {
   try {
@@ -46,7 +54,13 @@ export const testApiKey = async (apiKey: string): Promise<boolean> => {
 };
 
 const getApiKey = (userApiKey: string) => {
-  return userApiKey || (typeof process !== 'undefined' && process.env ? process.env.API_KEY : "") || "";
+  // Vite의 define으로 치환되거나 유저가 입력한 키를 반환
+  if (userApiKey) return userApiKey;
+  try {
+    return process.env.API_KEY || "";
+  } catch {
+    return "";
+  }
 };
 
 export const generateSageFeedback = async (guess: number, target: number, attempt: number, userApiKey: string) => {
