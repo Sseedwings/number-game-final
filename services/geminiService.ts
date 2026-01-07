@@ -2,31 +2,36 @@ import { GoogleGenAI, Modality } from "@google/genai";
 
 // 오디오 데이터 디코딩 및 재생 유틸리티
 async function playAudioFromBase64(base64: string) {
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-  const dataInt16 = new Int16Array(bytes.buffer);
-  const buffer = ctx.createBuffer(1, dataInt16.length, 24000);
-  const channelData = buffer.getChannelData(0);
-  for (let i = 0; i < dataInt16.length; i++) {
-    channelData[i] = dataInt16[i] / 32768.0;
-  }
+  try {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    const dataInt16 = new Int16Array(bytes.buffer);
+    const buffer = ctx.createBuffer(1, dataInt16.length, 24000);
+    const channelData = buffer.getChannelData(0);
+    for (let i = 0; i < dataInt16.length; i++) {
+      channelData[i] = dataInt16[i] / 32768.0;
+    }
 
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-  const gainNode = ctx.createGain();
-  gainNode.gain.value = 2.0; // 현자의 목소리 강조
-  source.connect(gainNode);
-  gainNode.connect(ctx.destination);
-  source.start(0);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = 2.0; 
+    source.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    source.start(0);
+  } catch (e) {
+    console.error("Audio playback failed:", e);
+  }
 }
 
 // API 키 유효성 테스트
 export const testApiKey = async (apiKey: string): Promise<boolean> => {
+  if (!apiKey) return false;
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
@@ -40,8 +45,14 @@ export const testApiKey = async (apiKey: string): Promise<boolean> => {
   }
 };
 
+const getApiKey = (userApiKey: string) => {
+  return userApiKey || (typeof process !== 'undefined' && process.env ? process.env.API_KEY : "") || "";
+};
+
 export const generateSageFeedback = async (guess: number, target: number, attempt: number, userApiKey: string) => {
-  const apiKey = userApiKey || process.env.API_KEY || "";
+  const apiKey = getApiKey(userApiKey);
+  if (!apiKey) throw new Error("API Key is missing");
+  
   const ai = new GoogleGenAI({ apiKey });
   
   const isCorrect = guess === target;
@@ -66,7 +77,9 @@ export const generateSageFeedback = async (guess: number, target: number, attemp
 
 export const speakMessage = async (text: string, userApiKey: string) => {
   try {
-    const apiKey = userApiKey || process.env.API_KEY || "";
+    const apiKey = getApiKey(userApiKey);
+    if (!apiKey) return;
+
     const ai = new GoogleGenAI({ apiKey });
     
     const response = await ai.models.generateContent({

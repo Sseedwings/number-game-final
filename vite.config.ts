@@ -4,22 +4,17 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // 개별 속성 정의
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || ''),
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-    // 전역 process 객체 심(shim) - 라이브러리 내부 참조 대응
-    'process.platform': JSON.stringify('browser'),
+    // Vite 빌드 타임에 process.env 객체를 브라우저용으로 치환
+    'process.env': {
+      NODE_ENV: JSON.stringify(process.env.NODE_ENV || 'production'),
+      API_KEY: JSON.stringify(process.env.API_KEY || '')
+    },
     'global': 'window'
   },
   build: {
     target: 'esnext',
     outDir: 'dist',
-    sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
-      }
-    }
+    sourcemap: false
   },
   server: {
     port: 3000
