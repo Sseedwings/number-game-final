@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>성운의 현자: 숫자 탐구 v5.6</title>
+    <title>성운의 현자: 숫자 탐구 v6.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -58,6 +58,8 @@
         }
         .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
         .glow-cyan { text-shadow: 0 0 10px rgba(34, 211, 238, 0.5); }
+        .glow-blue { text-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
+        .glow-pink { text-shadow: 0 0 15px rgba(236, 72, 153, 0.6); }
     </style>
 <script type="importmap">
 {
@@ -78,7 +80,7 @@
     <div class="stars-container" id="stars"></div>
     <div id="root"></div>
     
-    <!-- Vite가 이 파일을 읽어 모든 의존성을 빌드합니다. -->
+    <!-- Vite가 이 파일을 빌드 엔트리로 사용하여 의존성을 관리합니다. -->
     <script type="module" src="/index.tsx"></script>
     
     <script>

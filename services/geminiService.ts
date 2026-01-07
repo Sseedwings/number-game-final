@@ -8,7 +8,6 @@ declare var process: {
   };
 };
 
-// 오디오 데이터 디코딩 및 재생 유틸리티
 async function playAudioFromBase64(base64: string) {
   try {
     const binaryString = atob(base64);
@@ -27,8 +26,10 @@ async function playAudioFromBase64(base64: string) {
 
     const source = ctx.createBufferSource();
     source.buffer = buffer;
+    
     const gainNode = ctx.createGain();
     gainNode.gain.value = 2.0; 
+    
     source.connect(gainNode);
     gainNode.connect(ctx.destination);
     source.start(0);
@@ -37,7 +38,6 @@ async function playAudioFromBase64(base64: string) {
   }
 }
 
-// API 키 유효성 테스트
 export const testApiKey = async (apiKey: string): Promise<boolean> => {
   if (!apiKey) return false;
   try {
@@ -54,7 +54,6 @@ export const testApiKey = async (apiKey: string): Promise<boolean> => {
 };
 
 const getApiKey = (userApiKey: string) => {
-  // Vite의 define으로 치환되거나 유저가 입력한 키를 반환
   if (userApiKey) return userApiKey;
   try {
     return process.env.API_KEY || "";
@@ -78,7 +77,6 @@ export const generateSageFeedback = async (guess: number, target: number, attemp
   
   지침:
   - 한국어로 신비롭고 고풍스럽게 대답하세요 (~소, ~구려, ~도다).
-  - 추측이 맞았다면 극찬을, 틀렸다면 철학적인 힌트를 주되 정답 숫자는 절대 말하지 마세요.
   - 답변은 2문장 이내로 짧고 강렬하게 하세요.`;
 
   const response = await ai.models.generateContent({
@@ -96,9 +94,12 @@ export const speakMessage = async (text: string, userApiKey: string) => {
 
     const ai = new GoogleGenAI({ apiKey });
     
+    // 속도를 3배속 느낌으로 아주 빠르게 읊조리도록 지시 (피치는 낮게 유지)
+    const ttsPrompt = `고풍스럽고 신비로운 현자의 목소리이나, 속도는 숨 가쁠 정도로 매우 빠르게(약 3배속 수준) 읊조리시오. 피치는 낮고 평온하게 유지하되 딜레이 없이 즉시 말하시오: ${text}`;
+    
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text }] }],
+      contents: [{ parts: [{ text: ttsPrompt }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {

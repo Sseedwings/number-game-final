@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<any[]>([]);
   const [status, setStatus] = useState<'playing' | 'won' | 'lost'>('playing');
   const [message, setMessage] = useState("성운의 현자가 당신의 파동을 기다리고 있소.");
+  const [lastDirection, setLastDirection] = useState<'high' | 'low' | 'correct' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [shouldShake, setShouldShake] = useState(false);
 
@@ -31,6 +32,7 @@ const App: React.FC = () => {
     setTarget(Math.floor(Math.random() * 100) + 1);
     setHistory([]);
     setStatus('playing');
+    setLastDirection(null);
     setMessage("환영하오. 1부터 100 사이, 운명의 숫자를 찾아보시오.");
     soundService.startBGM();
     soundService.playReset();
@@ -73,13 +75,18 @@ const App: React.FC = () => {
     setIsLoading(true);
     soundService.playScan();
 
-    const newHistory = [...history, { value: val, time: Date.now() }];
+    const newDirection = val === target ? 'correct' : (val > target ? 'high' : 'low');
+    const newHistory = [...history, { value: val, direction: newDirection, time: Date.now() }];
     setHistory(newHistory);
     setGuess("");
+    setLastDirection(newDirection);
 
     try {
+      // 피드백 생성과 나레이션을 더 빠르게 연결
       const feedback = await generateSageFeedback(val, target, newHistory.length, apiKeyInput);
       setMessage(feedback || "");
+      
+      // 상태 업데이트 직후 나레이션 즉시 실행
       speakMessage(feedback || "", apiKeyInput);
 
       if (val === target) {
@@ -104,7 +111,15 @@ const App: React.FC = () => {
     }
   };
 
-  // API Key 입력 모달
+  // 피드백 텍스트 색상 결정
+  const getMessageColorClass = () => {
+    if (status === 'won') return 'text-emerald-400 glow-cyan';
+    if (status === 'lost') return 'text-rose-500';
+    if (lastDirection === 'high') return 'text-pink-500 glow-pink';
+    if (lastDirection === 'low') return 'text-blue-400 glow-blue';
+    return 'text-slate-100';
+  };
+
   if (showKeyModal) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
@@ -133,12 +148,6 @@ const App: React.FC = () => {
                   파동 검증 중...
                 </>
               ) : "관문 통과하기"}
-            </button>
-            <button 
-              onClick={() => setShowKeyModal(false)}
-              className="w-full py-2 text-slate-500 text-xs hover:text-slate-300 transition-colors"
-            >
-              취소
             </button>
           </div>
         </div>
@@ -190,7 +199,7 @@ const App: React.FC = () => {
               <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-cyan-400 animate-ping' : 'bg-cyan-900'}`}></div>
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Oracle Response</span>
             </div>
-            <p className="text-xl md:text-2xl text-slate-100 font-semibold leading-tight italic">
+            <p className={`text-xl md:text-2xl font-semibold leading-tight italic transition-colors duration-500 ${getMessageColorClass()}`}>
               {isLoading ? "차원의 틈을 엿보는 중..." : `"${message}"`}
             </p>
           </div>
